@@ -1,0 +1,43 @@
+import sys
+from getpass import getpass
+from jnpr.junos import Device
+from jnpr.junos.exception import ConnectError
+from lxml import etree
+from jnpr.junos.factory.factory_loader import FactoryLoader
+import yaml
+
+hostname = "<IP.add.re.ss>"
+junos_username = '<your_username>'
+junos_password = getpass("Password: ")
+
+myYAML = '''
+---
+InterfaceTable:
+  set: interfaces/interface
+  key-field:
+    - name
+    - unit_name
+  view: InterfaceView
+
+InterfaceView:
+  groups:
+    unit: unit
+  fields:
+    name: name
+    disable: {'disable' : {"type" : 'bool'}}
+  fields_unit:
+    unit_name : name
+    desc : description
+   '''
+
+globals().update(FactoryLoader().load(yaml.load(myYAML)))
+
+node = Device(host=hostname, user=junos_username, passwd=junos_password).open()
+interface = InterfaceTable(node).get()
+
+for intf in interface:
+    if intf.name == 'ge-0/1/1':
+        olly = intf.desc
+        intf.disable = olly
+        <...>
+node.close()
